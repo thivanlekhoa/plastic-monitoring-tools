@@ -27,7 +27,7 @@ st.divider()
 # ==========================================
 # PART 1: RECOMMENDATION ENGINE
 # ==========================================
-st.header("Part 1: Find the Best Method")
+st.header("Part 1: Find Your Methods")
 st.write("Please fill out the categories below to filter the available monitoring methods.")
 
 # --- CATEGORY 1: Data Needs ---
