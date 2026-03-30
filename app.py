@@ -19,7 +19,7 @@ labels_df = load_labels_matrix()
 properties_df = load_properties()
 
 st.title("🌊 Framework for Monitoring Plastic Export from Rivers to the Ocean")
-st.write("Use this decision-support tool to identify the most suitable monitoring methods based on your project's specific constraints and goals.")
+st.write("Use this decision-support tool to identify the most suitable monitoring methods based on your project's specific constraints and goals and learn how to use them.")
 
 st.divider()
 
@@ -56,7 +56,7 @@ st.subheader("⏱️ 3. Temporal Scope")
 st.write("*For 'Continuous', this means monitoring can run continuously during a certain time interval. 'Intermittent' means monitoring will be disrupted or paused to set up facilities, change locations, or reset equipment.*")
 temporal_options = [
     "Continuous", 
-    "Intermittent"
+    "Intermittent" # Now matches the CSV perfectly!
 ]
 temporal = st.multiselect("Select your Temporal Scope:", options=temporal_options)
 
@@ -100,11 +100,9 @@ if st.button("Get Recommendations", type="primary"):
             category_matched = False
             
             for label in labels_in_category:
-                # Map 'Intermittent' UI label back to the CSV column name so it doesn't break
-                csv_label_name = "Scheduled repeated surveys" if label == "Intermittent" else label
-                
-                if csv_label_name in labels_df.columns:
-                    cell_value = str(row[csv_label_name]).strip().lower()
+                # We now use the label directly since the CSV is updated
+                if label in labels_df.columns:
+                    cell_value = str(row[label]).strip().lower()
                     if cell_value == 'x':
                         category_matched = True
                         break # Stop checking this category once we find 1 match
@@ -139,7 +137,6 @@ if st.button("Get Recommendations", type="primary"):
     if len(all_selected_labels) == 0:
         st.warning("Please select at least one filter above to see recommendations.")
     else:
-        # Changed to 3 columns since we removed the "Highly Recommended" tier
         col1, col2, col3 = st.columns(3)
         
         with col1:
