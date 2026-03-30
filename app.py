@@ -103,7 +103,7 @@ if st.button("Get Recommendations", type="primary"):
 
     # Loop through each method in the matrix
     for index, row in labels_df.iterrows():
-        method_name = str(row['Method'])
+        method_name = str(row['Method']).strip()
         category_match_count = 0
         exclude_reason = ""
 
