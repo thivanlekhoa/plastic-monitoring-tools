@@ -1,7 +1,0 @@
-Method,Primary Platform,Temporal Resolution,Automation Level,Initial Investment Cost,Operational Cost,Key Limitations,Best Suited For
-Visual counting from bridge,Bridge,Continuous/Intermittent,Manual,Low,Low,Daylight only weather dependent,Quick low-budget campaigns
-Visual counting from boat,Boat,Intermittent,Manual,Low/High,High,Daylight only boat access needed,Mobile spot checks
-Bridge-mounted camera sensor,Bridge,Continuous,Automated,High,Medium,Needs power & maintenance AI training,Long-term automated monitoring
-Net trawling from bridge,Bridge,Intermittent,Manual,Medium,Medium,Bridge access net clogging,Mass-flux studies
-Fixed in-water trawling,Fixed in-river,Continuous,Manual,Medium,Low,Fixed position,Continuous baseline monitoring
-Boat trawling,Boat,Intermittent,Manual,Medium/High,High,High cost weather dependent,Mass-flux studies
