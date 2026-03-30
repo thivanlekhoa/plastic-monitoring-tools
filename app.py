@@ -53,7 +53,7 @@ infrastructure = st.multiselect("Select your available Infrastructure:", options
 
 # --- CATEGORY 3: Temporal Scope ---
 st.subheader("⏱️ 3. Temporal Scope")
-st.write("*For 'Continuous', this means monitoring can run continuously during a certain time interval. 'Intermittent' means monitoring will be disrupted or paused to set up facilities, change locations, or reset equipment.*")
+st.write("*For 'Continuous', this means monitoring can run continuously during a certain time interval.* \n\n *'Intermittent' means monitoring will be disrupted or paused to set up facilities, change locations, or reset equipment.*")
 temporal_options = [
     "Continuous", 
     "Intermittent" 
