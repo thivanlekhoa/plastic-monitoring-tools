@@ -31,7 +31,7 @@ st.write("Please fill out the categories below to filter the available monitorin
 
 # --- CATEGORY 1: Data Needs ---
 st.subheader("📊 1. Data Needs")
-st.write("*Select the specific type of data you need to collect, such as counting items over time or analyzing physical properties, as well as the water depth you are targeting.*")
+st.write("*Select the specific type of data you need to collect, such as counting items over time or analyzing physical properties.*")
 data_needs_options = [
     "Flux quantification (items/time)", 
     "Physical characterization (mass, polymer)", 
