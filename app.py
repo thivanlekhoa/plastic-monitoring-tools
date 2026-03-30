@@ -13,7 +13,6 @@ def load_labels_matrix():
 
 @st.cache_data
 def load_properties():
-    # UPDATED: Now points to the newly cleaned properties file
     return pd.read_csv("properties_clean.csv")
 
 labels_df = load_labels_matrix()
@@ -27,7 +26,7 @@ st.divider()
 # ==========================================
 # PART 1: RECOMMENDATION ENGINE
 # ==========================================
-st.header("Part 1: Find Your Methods")
+st.header("Part 1: Find the Best Method")
 st.write("Please fill out the categories below to filter the available monitoring methods.")
 
 # --- CATEGORY 1: Data Needs ---
@@ -63,7 +62,11 @@ temporal = st.multiselect("Select your Temporal Scope:", options=temporal_option
 
 # --- CATEGORY 4: Resource Capacity ---
 st.subheader("💰 4. Resource Capacity")
-st.write("*Specify your financial and operational budget. This ensures the recommended tools align with your funding and team capabilities.*")
+st.write("""
+*Specify your financial and operational budget. This ensures the recommended tools align with your funding and team capabilities.*
+
+*Please read Section [XX] in the report to understand how we define Resource Capacity.*
+""")
 resource_options = [
     "Low budget", 
     "Medium budget", 
