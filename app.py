@@ -53,11 +53,10 @@ infrastructure = st.multiselect("Select your available Infrastructure:", options
 
 # --- CATEGORY 3: Temporal Scope ---
 st.subheader("⏱️ 3. Temporal Scope")
-st.write("*Determine how frequently you plan to collect data. Some methods are built for quick, one-off checks, while others excel at long-term, continuous observation.*")
+st.write("*For 'Continuous', this means monitoring can run continuously during a certain time interval. 'Intermittent' means monitoring will be disrupted or paused to set up facilities, change locations, or reset equipment.*")
 temporal_options = [
     "Continuous", 
-    "Scheduled repeated surveys", 
-    "One-time"
+    "Intermittent"
 ]
 temporal = st.multiselect("Select your Temporal Scope:", options=temporal_options)
 
@@ -71,32 +70,47 @@ resource_options = [
 ]
 resource = st.multiselect("Select your Resource Capacity:", options=resource_options)
 
-# Combine all selections into one list for the logic engine
-selected_labels = data_needs + infrastructure + temporal + resource
-
 # --- RECOMMENDATION LOGIC ---
 if st.button("Get Recommendations", type="primary"):
-    highly_rec = []
     good_fit = []
     possible_fit = []
     not_rec = []
 
-    # Check for exclusion flags
-    has_open_water = any("Open water" in label for label in selected_labels)
-    has_submerged = any("Submerged items" in label for label in selected_labels)
+    # Dictionary to group user selections by category
+    selected_categories = {
+        "Data Needs": data_needs,
+        "Infrastructure": infrastructure,
+        "Temporal": temporal,
+        "Resource": resource
+    }
+
+    # For exclusion flag checks
+    all_selected_labels = data_needs + infrastructure + temporal + resource
+    has_open_water = any("Open water" in label for label in all_selected_labels)
+    has_submerged = any("Submerged items" in label for label in all_selected_labels)
 
     # Loop through each method in the matrix
     for index, row in labels_df.iterrows():
         method_name = str(row['Method'])
-        match_count = 0
+        category_match_count = 0
         exclude_reason = ""
 
-        # Count how many selected labels have an "x" for this method
-        for label in selected_labels:
-            if label in labels_df.columns: # Safety check
-                cell_value = str(row[label]).strip().lower()
-                if cell_value == 'x':
-                    match_count += 1
+        # Score by Category (Max 1 point per category)
+        for category, labels_in_category in selected_categories.items():
+            category_matched = False
+            
+            for label in labels_in_category:
+                # Map 'Intermittent' UI label back to the CSV column name so it doesn't break
+                csv_label_name = "Scheduled repeated surveys" if label == "Intermittent" else label
+                
+                if csv_label_name in labels_df.columns:
+                    cell_value = str(row[csv_label_name]).strip().lower()
+                    if cell_value == 'x':
+                        category_matched = True
+                        break # Stop checking this category once we find 1 match
+            
+            if category_matched:
+                category_match_count += 1
 
         # --- LOGIC: Apply Exclusion Rules ---
         bridge_methods = ["Visual counting from bridge", "Bridge-mounted camera sensor", "Surface trawling from bridge", "Net trawling from bridge"]
@@ -114,34 +128,29 @@ if st.button("Get Recommendations", type="primary"):
         if exclude_reason != "":
             not_rec.append(f"**{method_name}**\n\n*{exclude_reason}*")
         else:
-            if match_count >= 4:
-                highly_rec.append(f"**{method_name}**")
-            elif match_count == 3:
+            if category_match_count >= 3:
                 good_fit.append(f"**{method_name}**")
-            elif match_count >= 1:
+            elif category_match_count >= 1:
                 possible_fit.append(f"**{method_name}**")
 
     # Display the sorted buckets neatly
     st.markdown("### 🏆 Your Recommendations")
     
-    if len(selected_labels) == 0:
+    if len(all_selected_labels) == 0:
         st.warning("Please select at least one filter above to see recommendations.")
     else:
-        col1, col2, col3, col4 = st.columns(4)
+        # Changed to 3 columns since we removed the "Highly Recommended" tier
+        col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.success("🌟 **HIGHLY RECOMMENDED**\n\n(4+ matches)")
-            for m in highly_rec: st.info(m)
-            if not highly_rec: st.write("*None*")
-        with col2:
-            st.info("✅ **Good Fit**\n\n(3 matches)")
+            st.success("✅ **Good Fit**\n\n(Matches in 3-4 categories)")
             for m in good_fit: st.success(m)
             if not good_fit: st.write("*None*")
-        with col3:
-            st.warning("⚠️ **Possible Fit**\n\n(1-2 matches)")
+        with col2:
+            st.warning("⚠️ **Possible Fit**\n\n(Matches in 1-2 categories)")
             for m in possible_fit: st.warning(m)
             if not possible_fit: st.write("*None*")
-        with col4:
+        with col3:
             st.error("❌ **NOT RECOMMENDED**\n\n(Rule Exclusions)")
             for m in not_rec: st.error(m)
             if not not_rec: st.write("*None*")
@@ -152,7 +161,7 @@ st.divider()
 # PART 2: METHOD COMPARISON TOOL
 # ==========================================
 st.header("Part 2: Compare Methods")
-st.write("Select up to two methods from the recommendations above to compare their specific properties side-by-side.")
+st.write("Select up to two methods to compare their specific properties side-by-side.")
 
 all_methods = properties_df['Method'].tolist()
 
