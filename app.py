@@ -13,7 +13,8 @@ def load_labels_matrix():
 
 @st.cache_data
 def load_properties():
-    return pd.read_csv("data.csv")
+    # UPDATED: Now points to the newly cleaned properties file
+    return pd.read_csv("properties_clean.csv")
 
 labels_df = load_labels_matrix()
 properties_df = load_properties()
@@ -161,7 +162,6 @@ st.write("Select methods to compare their specific properties side-by-side.")
 
 all_methods = properties_df['Method'].tolist()
 
-# Removed the max_selections argument entirely so users can pick as many as they want
 compare_selection = st.multiselect(
     "Select methods to compare:",
     options=all_methods
@@ -171,4 +171,4 @@ if len(compare_selection) > 0:
     if st.button("Compare Methods"):
         compare_df = properties_df[properties_df['Method'].isin(compare_selection)]
         compare_df = compare_df.set_index('Method').T
-        st.dataframe(compare_df, use_container_width=True)
+        st.dataframe(compare_df, use_container_width=True, height=800)
