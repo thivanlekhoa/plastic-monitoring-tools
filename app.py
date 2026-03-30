@@ -63,7 +63,6 @@ temporal = st.multiselect("Select your Temporal Scope:", options=temporal_option
 # --- CATEGORY 4: Resource Capacity ---
 st.subheader("💰 4. Resource Capacity")
 st.write("*Specify your financial and operational budget. This ensures the recommended tools align with your funding and team capabilities.*")
-# UPDATED: Removed the parentheticals to match your new labels.csv headers
 resource_options = [
     "Low budget", 
     "Medium budget", 
@@ -101,7 +100,6 @@ if st.button("Get Recommendations", type="primary"):
             category_matched = False
             
             for label in labels_in_category:
-                # We use the label directly since the CSV headers perfectly match the UI options
                 if label in labels_df.columns:
                     cell_value = str(row[label]).strip().lower()
                     if cell_value == 'x':
@@ -159,14 +157,14 @@ st.divider()
 # PART 2: METHOD COMPARISON TOOL
 # ==========================================
 st.header("Part 2: Compare Methods")
-st.write("Select up to two methods to compare their specific properties side-by-side.")
+st.write("Select methods to compare their specific properties side-by-side.")
 
 all_methods = properties_df['Method'].tolist()
 
+# Removed the max_selections argument entirely so users can pick as many as they want
 compare_selection = st.multiselect(
-    "Select methods to compare (Max 2):",
-    options=all_methods,
-    max_selections=2
+    "Select methods to compare:",
+    options=all_methods
 )
 
 if len(compare_selection) > 0:
