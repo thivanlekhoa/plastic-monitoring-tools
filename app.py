@@ -56,17 +56,18 @@ st.subheader("⏱️ 3. Temporal Scope")
 st.write("*For 'Continuous', this means monitoring can run continuously during a certain time interval. 'Intermittent' means monitoring will be disrupted or paused to set up facilities, change locations, or reset equipment.*")
 temporal_options = [
     "Continuous", 
-    "Intermittent" # Now matches the CSV perfectly!
+    "Intermittent" 
 ]
 temporal = st.multiselect("Select your Temporal Scope:", options=temporal_options)
 
 # --- CATEGORY 4: Resource Capacity ---
 st.subheader("💰 4. Resource Capacity")
 st.write("*Specify your financial and operational budget. This ensures the recommended tools align with your funding and team capabilities.*")
+# UPDATED: Removed the parentheticals to match your new labels.csv headers
 resource_options = [
     "Low budget", 
-    "Medium budget (Vessel crew costs)", 
-    "High budget (Tech investment)"
+    "Medium budget", 
+    "High budget"
 ]
 resource = st.multiselect("Select your Resource Capacity:", options=resource_options)
 
@@ -100,7 +101,7 @@ if st.button("Get Recommendations", type="primary"):
             category_matched = False
             
             for label in labels_in_category:
-                # We now use the label directly since the CSV is updated
+                # We use the label directly since the CSV headers perfectly match the UI options
                 if label in labels_df.columns:
                     cell_value = str(row[label]).strip().lower()
                     if cell_value == 'x':
