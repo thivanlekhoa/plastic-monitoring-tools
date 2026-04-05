@@ -37,6 +37,14 @@ st.divider()
 st.header("Part 1: Find Your Methods")
 st.write("Please fill out the categories below to filter the available monitoring methods.")
 
+# --- RESET LOGIC ---
+# This callback clears the session state keys tied to the multiselects
+def clear_selections():
+    st.session_state.dn_key = []
+    st.session_state.infra_key = []
+    st.session_state.temp_key = []
+    st.session_state.res_key = []
+
 # --- CATEGORY 1: Data Needs ---
 st.subheader("📊 1. Data Needs")
 st.write("*Select the specific type of data you need to collect, such as counting items over time or analyzing physical properties.*")
@@ -46,7 +54,7 @@ data_needs_options = [
     "Floating (surface) items", 
     "Submerged items in water column"
 ]
-data_needs = st.multiselect("Select your Data Needs:", options=data_needs_options)
+data_needs = st.multiselect("Select your Data Needs:", options=data_needs_options, key="dn_key")
 
 # --- CATEGORY 2: Infrastructure ---
 st.subheader("🏗️ 2. Infrastructure")
@@ -59,14 +67,13 @@ infra_options = [
     "Anchored station available"
 ]
 
-infrastructure = st.multiselect("Select your available Infrastructure:", options=infra_options)
+infrastructure = st.multiselect("Select your available Infrastructure:", options=infra_options, key="infra_key")
 
 # --- Check for Infrastructure Conflict ---
 infra_conflict = "Bridge (fixed walkway) available" in infrastructure and "Open water (No existing infrastructure)" in infrastructure
 
 if infra_conflict:
     st.error("⚠️ You cannot select 'Open water' and 'Bridge' at the same time. You can only select one of them, please try again.")
-
 
 # --- CATEGORY 3: Temporal Scope ---
 st.subheader("⏱️ 3. Temporal Scope")
@@ -75,7 +82,7 @@ temporal_options = [
     "Continuous", 
     "Intermittent" 
 ]
-temporal = st.multiselect("Select your Temporal Scope:", options=temporal_options)
+temporal = st.multiselect("Select your Temporal Scope:", options=temporal_options, key="temp_key")
 
 # --- CATEGORY 4: Resource Capacity ---
 st.subheader("💰 4. Resource Capacity")
@@ -89,11 +96,22 @@ resource_options = [
     "Medium budget", 
     "High budget"
 ]
-resource = st.multiselect("Select your Resource Capacity:", options=resource_options)
+resource = st.multiselect("Select your Resource Capacity:", options=resource_options, key="res_key")
+
+# --- ACTION BUTTONS ---
+# Using columns to place the Get Recommendations and Reset buttons neatly side-by-side
+col_btn1, col_btn2 = st.columns([1, 5])
+
+with col_btn1:
+    # The button is disabled if there is an infrastructure conflict
+    get_recs_clicked = st.button("Get Recommendations", type="primary", disabled=infra_conflict)
+
+with col_btn2:
+    st.button("Reset Selections", on_click=clear_selections)
+
 
 # --- RECOMMENDATION LOGIC ---
-# The button is disabled if there is an infrastructure conflict
-if st.button("Get Recommendations", type="primary", disabled=infra_conflict):
+if get_recs_clicked:
     good_fit = []
     possible_fit = []
     not_rec = []
