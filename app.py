@@ -14,7 +14,6 @@ if 'compare_widget' not in st.session_state:
     st.session_state.compare_widget = []
 
 # --- LOAD DATA ---
-# Removed @st.cache_data so the CSVs load fresh every single time
 def load_labels_matrix():
     df = pd.read_csv("labels.csv")
     df.rename(columns={df.columns[0]: 'Method'}, inplace=True)
@@ -65,7 +64,6 @@ def trigger_comparison(methods_to_compare):
 # --- CATEGORY 1: Data Needs ---
 st.subheader("📊 1. Data Needs")
 st.write("*Select the specific type of data you need to collect, such as counting items over time or analyzing physical properties.*")
-# UPDATED: "Flux quantification (items/time)" removed
 data_needs_options = [
     "Physical characterization (mass, polymer)", 
     "Floating (surface) items", 
@@ -161,6 +159,7 @@ if st.session_state.show_recs:
         method_name = str(row['Method']).strip()
         category_match_count = 0
         exclusion_reasons_list = []
+        matched_categories_list = [] # NEW: Keep track of which categories matched!
 
         # Score by Category (Max 1 point per category)
         for category, labels_in_category in selected_categories.items():
@@ -175,6 +174,7 @@ if st.session_state.show_recs:
             
             if category_matched:
                 category_match_count += 1
+                matched_categories_list.append(category) # NEW: Record the category
 
         # --- LOGIC: Apply Exclusion Rules ---
         bridge_methods = ["Visual counting from bridge", "Bridge-mounted camera sensor", "Surface trawling from bridge", "Net trawling from bridge"]
@@ -194,11 +194,17 @@ if st.session_state.show_recs:
             exclude_reason_text = "(" + " & ".join(exclusion_reasons_list) + ")"
             not_rec.append(f"**{method_name}**\n\n*{exclude_reason_text}*")
         else:
+            # NEW: Format the explanation text for why it matched
+            if len(matched_categories_list) > 0:
+                match_text = "(Matches: " + ", ".join(matched_categories_list) + ")"
+            else:
+                match_text = "(No exact matches, but not excluded)"
+
             if category_match_count >= 3:
-                good_fit.append(f"**{method_name}**")
+                good_fit.append(f"**{method_name}**\n\n*{match_text}*")
                 clean_recommended_methods.append(method_name)
             elif category_match_count >= 1:
-                possible_fit.append(f"**{method_name}**")
+                possible_fit.append(f"**{method_name}**\n\n*{match_text}*")
                 clean_recommended_methods.append(method_name)
 
     # Display the sorted buckets neatly
