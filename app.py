@@ -65,7 +65,7 @@ infrastructure = st.multiselect("Select your available Infrastructure:", options
 infra_conflict = "Bridge (fixed walkway) available" in infrastructure and "Open water (No existing infrastructure)" in infrastructure
 
 if infra_conflict:
-    st.error("⚠️ You cannot select 'Open water' and 'Bridge available' at the same time. You can only select one of them, please try again.")
+    st.error("⚠️ You cannot select 'Open water' and 'Bridge' at the same time. You can only select one of them, please try again.")
 
 
 # --- CATEGORY 3: Temporal Scope ---
@@ -118,12 +118,13 @@ if st.button("Get Recommendations", type="primary", disabled=infra_conflict):
     all_selected_labels = data_needs + infrastructure + temporal + resource
     has_open_water = any("Open water" in label for label in all_selected_labels)
     has_submerged = any("Submerged items" in label for label in all_selected_labels)
+    has_characterization = any("Physical characterization" in label for label in all_selected_labels)
 
     # Loop through each method in the matrix
     for index, row in labels_df.iterrows():
         method_name = str(row['Method']).strip()
         category_match_count = 0
-        exclude_reason = ""
+        exclusion_reasons_list = []
 
         # Score by Category (Max 1 point per category)
         for category, labels_in_category in selected_categories.items():
@@ -140,20 +141,27 @@ if st.button("Get Recommendations", type="primary", disabled=infra_conflict):
                 category_match_count += 1
 
         # --- LOGIC: Apply Exclusion Rules ---
+        
+        # 1. Bridge Requirement Exclusion
         bridge_methods = ["Visual counting from bridge", "Bridge-mounted camera sensor", "Surface trawling from bridge", "Net trawling from bridge"]
         if has_open_water and any(m in method_name for m in bridge_methods):
-            exclude_reason = "(Requires Bridge)"
+            exclusion_reasons_list.append("Requires Bridge")
 
+        # 2. Submerged Items Exclusion
         visual_methods = ["Visual counting from bridge", "Visual counting from boat"]
         if has_submerged and any(m in method_name for m in visual_methods):
-            if exclude_reason == "":
-                exclude_reason = "(Visual methods cannot see submerged items)"
-            else:
-                exclude_reason = "(Requires Bridge & Cannot see submerged items)"
+            exclusion_reasons_list.append("Cannot see submerged items")
+
+        # 3. Physical Characterization Exclusion
+        characterization_methods = ["Visual counting from bridge", "Bridge-mounted camera sensor", "Visual counting from boat"]
+        if has_characterization and any(m in method_name for m in characterization_methods):
+            exclusion_reasons_list.append("Cannot physically characterize mass/polymer")
 
         # --- LOGIC: Sort into Buckets ---
-        if exclude_reason != "":
-            not_rec.append(f"**{method_name}**\n\n*{exclude_reason}*")
+        if len(exclusion_reasons_list) > 0:
+            # Join multiple reasons together neatly
+            exclude_reason_text = "(" + " & ".join(exclusion_reasons_list) + ")"
+            not_rec.append(f"**{method_name}**\n\n*{exclude_reason_text}*")
         else:
             if category_match_count >= 3:
                 good_fit.append(f"**{method_name}**")
