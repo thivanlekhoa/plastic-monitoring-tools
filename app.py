@@ -65,8 +65,8 @@ def trigger_comparison(methods_to_compare):
 # --- CATEGORY 1: Data Needs ---
 st.subheader("📊 1. Data Needs")
 st.write("*Select the specific type of data you need to collect, such as counting items over time or analyzing physical properties.*")
+# UPDATED: "Flux quantification (items/time)" removed
 data_needs_options = [
-    "Flux quantification (items/time)", 
     "Physical characterization (mass, polymer)", 
     "Floating (surface) items", 
     "Submerged items in water column"
