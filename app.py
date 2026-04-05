@@ -14,6 +14,7 @@ if 'compare_widget' not in st.session_state:
     st.session_state.compare_widget = []
 
 # --- LOAD DATA ---
+# Removed @st.cache_data so the CSVs load fresh every single time
 def load_labels_matrix():
     df = pd.read_csv("labels.csv")
     df.rename(columns={df.columns[0]: 'Method'}, inplace=True)
@@ -129,8 +130,9 @@ if st.session_state.show_recs:
     possible_fit = []
     not_rec = []
     
-    # We keep clean lists of names just to pass to the comparison tool
-    clean_recommended_methods = []
+    # NEW: Keep separate clean lists to apply the new comparison logic
+    clean_good_fit = []
+    clean_possible_fit = []
 
     # Apply Cascading Logic for Resource Capacity
     effective_resource = list(resource)
@@ -159,7 +161,7 @@ if st.session_state.show_recs:
         method_name = str(row['Method']).strip()
         category_match_count = 0
         exclusion_reasons_list = []
-        matched_categories_list = [] # NEW: Keep track of which categories matched!
+        matched_categories_list = []
 
         # Score by Category (Max 1 point per category)
         for category, labels_in_category in selected_categories.items():
@@ -174,7 +176,7 @@ if st.session_state.show_recs:
             
             if category_matched:
                 category_match_count += 1
-                matched_categories_list.append(category) # NEW: Record the category
+                matched_categories_list.append(category)
 
         # --- LOGIC: Apply Exclusion Rules ---
         bridge_methods = ["Visual counting from bridge", "Bridge-mounted camera sensor", "Surface trawling from bridge", "Net trawling from bridge"]
@@ -194,7 +196,6 @@ if st.session_state.show_recs:
             exclude_reason_text = "(" + " & ".join(exclusion_reasons_list) + ")"
             not_rec.append(f"**{method_name}**\n\n*{exclude_reason_text}*")
         else:
-            # NEW: Format the explanation text for why it matched
             if len(matched_categories_list) > 0:
                 match_text = "(Matches: " + ", ".join(matched_categories_list) + ")"
             else:
@@ -202,10 +203,10 @@ if st.session_state.show_recs:
 
             if category_match_count >= 3:
                 good_fit.append(f"**{method_name}**\n\n*{match_text}*")
-                clean_recommended_methods.append(method_name)
+                clean_good_fit.append(method_name) # Track separately
             elif category_match_count >= 1:
                 possible_fit.append(f"**{method_name}**\n\n*{match_text}*")
-                clean_recommended_methods.append(method_name)
+                clean_possible_fit.append(method_name) # Track separately
 
     # Display the sorted buckets neatly
     st.markdown("### 🏆 Your Recommendations")
@@ -228,14 +229,29 @@ if st.session_state.show_recs:
             for m in not_rec: st.error(m)
             if not not_rec: st.write("*None*")
 
-        # --- AUTO COMPARE BUTTON ---
-        if len(clean_recommended_methods) > 1:
+        # --- AUTO COMPARE BUTTON LOGIC ---
+        methods_to_compare = []
+
+        if len(clean_good_fit) > 1:
+            # If multiple Good Fits, compare ONLY Good Fits
+            methods_to_compare = clean_good_fit
+        elif len(clean_good_fit) == 1:
+            # If 1 Good Fit, compare with Possible Fits (if they exist)
+            if len(clean_possible_fit) > 0:
+                methods_to_compare = clean_good_fit + clean_possible_fit
+        elif len(clean_good_fit) == 0:
+            # If 0 Good Fits, compare Possible Fits (if multiple exist)
+            if len(clean_possible_fit) > 1:
+                methods_to_compare = clean_possible_fit
+
+        # Only show the button if we actually have at least 2 things to compare
+        if len(methods_to_compare) > 1:
             st.write("") # Add a little vertical space
             st.button(
                 "📊 Compare Recommended Methods", 
                 type="secondary", 
                 on_click=trigger_comparison, 
-                args=(clean_recommended_methods,)
+                args=(methods_to_compare,)
             )
 
 st.divider() 
