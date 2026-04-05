@@ -112,8 +112,8 @@ if infra_conflict:
 # --- CATEGORY 3: Temporal Scope ---
 st.subheader("⏱️ 3. Temporal Scope")
 st.write("""
-* *'Continuous'* means monitoring can run continuously during a certain time interval.
-* *'Intermittent'* means monitoring will be disrupted or paused to set up facilities, change locations, or reset equipment.
+* **Continuous:** Monitoring can run continuously during a certain time interval.
+* **Intermittent:** Monitoring will be disrupted or paused to set up facilities, change locations, or reset equipment.
 """)
 temporal_options = [
     "Continuous", 
