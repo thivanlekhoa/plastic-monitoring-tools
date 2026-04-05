@@ -4,6 +4,15 @@ import pandas as pd
 # Set up the page
 st.set_page_config(page_title="Framework for Monitoring Plastic Export", layout="wide")
 
+# --- INITIALIZE SESSION STATE ---
+# We use session state to remember actions across button clicks
+if 'show_recs' not in st.session_state:
+    st.session_state.show_recs = False
+if 'auto_compare' not in st.session_state:
+    st.session_state.auto_compare = False
+if 'compare_widget' not in st.session_state:
+    st.session_state.compare_widget = []
+
 # --- LOAD DATA ---
 @st.cache_data
 def load_labels_matrix():
@@ -20,7 +29,6 @@ properties_df = load_properties()
 
 st.title("🌊 Framework for Monitoring Plastic Export from Rivers to the Ocean")
 
-# UPDATED: Expanded introductory instructions
 st.write("""
 Use this decision-support tool to identify the most suitable monitoring methods based on your project's specific constraints and goals, and learn how to use them.
 
@@ -37,13 +45,23 @@ st.divider()
 st.header("Part 1: Find Your Methods")
 st.write("Please fill out the categories below to filter the available monitoring methods.")
 
-# --- RESET LOGIC ---
-# This callback clears the session state keys tied to the multiselects
+# --- CALLBACK FUNCTIONS ---
+def trigger_recs():
+    st.session_state.show_recs = True
+    st.session_state.auto_compare = False # Reset comparison flag on new search
+
 def clear_selections():
     st.session_state.dn_key = []
     st.session_state.infra_key = []
     st.session_state.temp_key = []
     st.session_state.res_key = []
+    st.session_state.show_recs = False
+    st.session_state.auto_compare = False
+    st.session_state.compare_widget = []
+
+def trigger_comparison(methods_to_compare):
+    st.session_state.compare_widget = methods_to_compare
+    st.session_state.auto_compare = True
 
 # --- CATEGORY 1: Data Needs ---
 st.subheader("📊 1. Data Needs")
@@ -99,22 +117,23 @@ resource_options = [
 resource = st.multiselect("Select your Resource Capacity:", options=resource_options, key="res_key")
 
 # --- ACTION BUTTONS ---
-# Using columns to place the Get Recommendations and Reset buttons neatly side-by-side
 col_btn1, col_btn2 = st.columns([1, 5])
 
 with col_btn1:
-    # The button is disabled if there is an infrastructure conflict
-    get_recs_clicked = st.button("Get Recommendations", type="primary", disabled=infra_conflict)
+    st.button("Get Recommendations", type="primary", disabled=infra_conflict, on_click=trigger_recs)
 
 with col_btn2:
     st.button("Reset Selections", on_click=clear_selections)
 
 
 # --- RECOMMENDATION LOGIC ---
-if get_recs_clicked:
+if st.session_state.show_recs:
     good_fit = []
     possible_fit = []
     not_rec = []
+    
+    # We keep clean lists of names just to pass to the comparison tool
+    clean_recommended_methods = []
 
     # Apply Cascading Logic for Resource Capacity
     effective_resource = list(resource)
@@ -159,32 +178,29 @@ if get_recs_clicked:
                 category_match_count += 1
 
         # --- LOGIC: Apply Exclusion Rules ---
-        
-        # 1. Bridge Requirement Exclusion
         bridge_methods = ["Visual counting from bridge", "Bridge-mounted camera sensor", "Surface trawling from bridge", "Net trawling from bridge"]
         if has_open_water and any(m in method_name for m in bridge_methods):
             exclusion_reasons_list.append("Requires Bridge")
 
-        # 2. Submerged Items Exclusion
         visual_methods = ["Visual counting from bridge", "Visual counting from boat"]
         if has_submerged and any(m in method_name for m in visual_methods):
             exclusion_reasons_list.append("Cannot see submerged items")
 
-        # 3. Physical Characterization Exclusion
         characterization_methods = ["Visual counting from bridge", "Bridge-mounted camera sensor", "Visual counting from boat"]
         if has_characterization and any(m in method_name for m in characterization_methods):
             exclusion_reasons_list.append("Cannot physically characterize mass/polymer")
 
         # --- LOGIC: Sort into Buckets ---
         if len(exclusion_reasons_list) > 0:
-            # Join multiple reasons together neatly
             exclude_reason_text = "(" + " & ".join(exclusion_reasons_list) + ")"
             not_rec.append(f"**{method_name}**\n\n*{exclude_reason_text}*")
         else:
             if category_match_count >= 3:
                 good_fit.append(f"**{method_name}**")
+                clean_recommended_methods.append(method_name)
             elif category_match_count >= 1:
                 possible_fit.append(f"**{method_name}**")
+                clean_recommended_methods.append(method_name)
 
     # Display the sorted buckets neatly
     st.markdown("### 🏆 Your Recommendations")
@@ -207,6 +223,16 @@ if get_recs_clicked:
             for m in not_rec: st.error(m)
             if not not_rec: st.write("*None*")
 
+        # --- AUTO COMPARE BUTTON ---
+        if len(clean_recommended_methods) > 1:
+            st.write("") # Add a little vertical space
+            st.button(
+                "📊 Compare Recommended Methods", 
+                type="secondary", 
+                on_click=trigger_comparison, 
+                args=(clean_recommended_methods,)
+            )
+
 st.divider() 
 
 # ==========================================
@@ -219,11 +245,16 @@ all_methods = properties_df['Method'].tolist()
 
 compare_selection = st.multiselect(
     "Select methods to compare:",
-    options=all_methods
+    options=all_methods,
+    key="compare_widget" # Tied directly to session state
 )
 
 if len(compare_selection) > 0:
-    if st.button("Compare Methods"):
+    # Trigger display if the manual button is clicked OR if auto_compare flag is true
+    if st.button("Compare Methods") or st.session_state.auto_compare:
+        # Reset the flag so it doesn't get permanently stuck "open" if the user changes selections later
+        st.session_state.auto_compare = False 
+        
         compare_df = properties_df[properties_df['Method'].isin(compare_selection)]
         compare_df = compare_df.set_index('Method').T
         st.dataframe(compare_df, use_container_width=True, height=800)
