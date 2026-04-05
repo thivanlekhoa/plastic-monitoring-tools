@@ -14,6 +14,7 @@ if 'compare_widget' not in st.session_state:
     st.session_state.compare_widget = []
 
 # --- LOAD DATA ---
+# Removed @st.cache_data so the CSVs load fresh every single time
 def load_labels_matrix():
     df = pd.read_csv("labels.csv")
     df.rename(columns={df.columns[0]: 'Method'}, inplace=True)
@@ -66,19 +67,32 @@ def trigger_comparison(methods_to_compare):
     st.session_state.compare_widget = methods_to_compare
     st.session_state.auto_compare = True
 
-# --- CATEGORY 1: Data Needs ---
-st.subheader("📊 1. Data Needs")
-st.write("*Select the specific type of data you need to collect, such as counting items over time or analyzing physical properties.*")
+# --- CATEGORY 1: Data Requirements ---
+st.subheader("📊 1. Data Requirements")
+st.write("""
+*Select the specific type of data you need to collect.*
+
+* **Physical Characterization:** Refers to the physical collection of plastic samples to determine weight, measurements, or polymer types.
+* **Floating (Surface) Items:** Focuses exclusively on plastics found on the water's surface layer.
+* **Submerged Items:** Targets plastics suspended within the water column below the surface.
+""")
 data_needs_options = [
     "Physical characterization (mass, polymer)", 
     "Floating (surface) items", 
     "Submerged items in water column"
 ]
-data_needs = st.multiselect("Select your Data Needs:", options=data_needs_options, key="dn_key")
+data_needs = st.multiselect("Select your Data Requirements:", options=data_needs_options, key="dn_key")
 
 # --- CATEGORY 2: Infrastructure ---
 st.subheader("🏗️ 2. Infrastructure")
-st.write("*Identify the physical structures and vessels you have access to at your monitoring location. This prevents recommending methods that require unavailable platforms.*")
+st.write("""
+*Identify the physical structures and vessels you have access to at your monitoring location. This prevents recommending methods that require unavailable platforms.*
+
+* **Bridge:** A safe, fixed walkway spanning the river, suitable for observation or equipment attachment.
+* **Open Water:** Areas without existing structures suitable for observation or equipment attachment.
+* **Vessel:** Access to a motorized or non-motorized boat.
+* **Anchored Station:** Access to a fixed floating platform, such as a pontoon, buoy, or anchored dock.
+""")
 
 infra_options = [
     "Bridge (fixed walkway) available", 
@@ -97,7 +111,10 @@ if infra_conflict:
 
 # --- CATEGORY 3: Temporal Scope ---
 st.subheader("⏱️ 3. Temporal Scope")
-st.write("*'Continuous' means monitoring can run continuously during a certain time interval.* \n\n *'Intermittent' means monitoring will be disrupted or paused to set up facilities, change locations, or reset equipment.*")
+st.write("""
+* *'Continuous'* means monitoring can run continuously during a certain time interval.
+* *'Intermittent'* means monitoring will be disrupted or paused to set up facilities, change locations, or reset equipment.
+""")
 temporal_options = [
     "Continuous", 
     "Intermittent" 
@@ -107,9 +124,7 @@ temporal = st.multiselect("Select your Temporal Scope:", options=temporal_option
 # --- CATEGORY 4: Resource Capacity ---
 st.subheader("💰 4. Resource Capacity")
 st.write("""
-*Specify your financial and operational budget. This ensures the recommended tools align with your funding and team capabilities.*
-
-*Please read Section [XX] in the report to understand how we define Resource Capacity.*
+*Budget encompasses both capital investment and operational costs. Please refer to our documentation for specific budget tier definitions. Selecting a higher budget level will also include recommendations for lower-tier methods (e.g., "High" includes Medium and Low; "Medium" includes Low).*
 """)
 resource_options = [
     "Low budget", 
@@ -134,7 +149,6 @@ if st.session_state.show_recs:
     possible_fit = []
     not_rec = []
     
-    # NEW: Keep separate clean lists to apply the new comparison logic
     clean_good_fit = []
     clean_possible_fit = []
 
@@ -207,10 +221,10 @@ if st.session_state.show_recs:
 
             if category_match_count >= 3:
                 good_fit.append(f"**{method_name}**\n\n*{match_text}*")
-                clean_good_fit.append(method_name) # Track separately
+                clean_good_fit.append(method_name) 
             elif category_match_count >= 1:
                 possible_fit.append(f"**{method_name}**\n\n*{match_text}*")
-                clean_possible_fit.append(method_name) # Track separately
+                clean_possible_fit.append(method_name) 
 
     # Display the sorted buckets neatly
     st.markdown("### 🏆 Your Recommendations")
@@ -237,20 +251,16 @@ if st.session_state.show_recs:
         methods_to_compare = []
 
         if len(clean_good_fit) > 1:
-            # If multiple Good Fits, compare ONLY Good Fits
             methods_to_compare = clean_good_fit
         elif len(clean_good_fit) == 1:
-            # If 1 Good Fit, compare with Possible Fits (if they exist)
             if len(clean_possible_fit) > 0:
                 methods_to_compare = clean_good_fit + clean_possible_fit
         elif len(clean_good_fit) == 0:
-            # If 0 Good Fits, compare Possible Fits (if multiple exist)
             if len(clean_possible_fit) > 1:
                 methods_to_compare = clean_possible_fit
 
-        # Only show the button if we actually have at least 2 things to compare
         if len(methods_to_compare) > 1:
-            st.write("") # Add a little vertical space
+            st.write("") 
             st.button(
                 "📊 Compare Recommended Methods", 
                 type="secondary", 
@@ -271,13 +281,11 @@ all_methods = properties_df['Method'].tolist()
 compare_selection = st.multiselect(
     "Select methods to compare:",
     options=all_methods,
-    key="compare_widget" # Tied directly to session state
+    key="compare_widget" 
 )
 
 if len(compare_selection) > 0:
-    # Trigger display if the manual button is clicked OR if auto_compare flag is true
     if st.button("Compare Methods") or st.session_state.auto_compare:
-        # Reset the flag so it doesn't get permanently stuck "open" if the user changes selections later
         st.session_state.auto_compare = False 
         
         compare_df = properties_df[properties_df['Method'].isin(compare_selection)]
