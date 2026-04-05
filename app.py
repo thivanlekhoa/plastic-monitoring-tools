@@ -20,7 +20,6 @@ properties_df = load_properties()
 
 st.title("🌊 Framework for Monitoring Plastic Export from Rivers to the Ocean")
 
-# UPDATED: Expanded introductory instructions
 st.write("""
 Use this decision-support tool to identify the most suitable monitoring methods based on your project's specific constraints and goals, and learn how to use them.
 
@@ -51,13 +50,39 @@ data_needs = st.multiselect("Select your Data Needs:", options=data_needs_option
 # --- CATEGORY 2: Infrastructure ---
 st.subheader("🏗️ 2. Infrastructure")
 st.write("*Identify the physical structures and vessels you have access to at your monitoring location. This prevents recommending methods that require unavailable platforms.*")
-infra_options = [
+
+# Setup base options for infrastructure
+base_infra_options = [
     "Bridge (fixed walkway) available", 
     "Open water (No existing infrastructure)", 
     "Vessel (boat) available", 
     "Anchored station available"
 ]
-infrastructure = st.multiselect("Select your available Infrastructure:", options=infra_options)
+
+# Initialize session state for infrastructure if it doesn't exist
+if 'infra_selection' not in st.session_state:
+    st.session_state.infra_selection = []
+
+# Callback function to update session state when the multiselect changes
+def update_infra():
+    st.session_state.infra_selection = st.session_state.infra_widget
+
+# Determine available options based on current selection for mutual exclusivity
+infra_options = base_infra_options.copy()
+if "Bridge (fixed walkway) available" in st.session_state.infra_selection:
+    if "Open water (No existing infrastructure)" in infra_options:
+        infra_options.remove("Open water (No existing infrastructure)")
+elif "Open water (No existing infrastructure)" in st.session_state.infra_selection:
+    if "Bridge (fixed walkway) available" in infra_options:
+        infra_options.remove("Bridge (fixed walkway) available")
+
+infrastructure = st.multiselect(
+    "Select your available Infrastructure:", 
+    options=infra_options,
+    default=st.session_state.infra_selection,
+    key="infra_widget",
+    on_change=update_infra
+)
 
 # --- CATEGORY 3: Temporal Scope ---
 st.subheader("⏱️ 3. Temporal Scope")
@@ -88,12 +113,20 @@ if st.button("Get Recommendations", type="primary"):
     possible_fit = []
     not_rec = []
 
-    # Dictionary to group user selections by category
+    # Apply Cascading Logic for Resource Capacity
+    effective_resource = list(resource)
+    if "High budget" in resource:
+        if "Medium budget" not in effective_resource: effective_resource.append("Medium budget")
+        if "Low budget" not in effective_resource: effective_resource.append("Low budget")
+    elif "Medium budget" in resource:
+        if "Low budget" not in effective_resource: effective_resource.append("Low budget")
+
+    # Dictionary to group user selections by category (using the updated effective_resource)
     selected_categories = {
         "Data Needs": data_needs,
         "Infrastructure": infrastructure,
         "Temporal": temporal,
-        "Resource": resource
+        "Resource": effective_resource
     }
 
     # For exclusion flag checks
