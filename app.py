@@ -65,7 +65,7 @@ infrastructure = st.multiselect("Select your available Infrastructure:", options
 infra_conflict = "Bridge (fixed walkway) available" in infrastructure and "Open water (No existing infrastructure)" in infrastructure
 
 if infra_conflict:
-    st.error("⚠️ You cannot select 'Open water' and 'Bridge' at the same time. You can only select one of them, please try again.")
+    st.error("⚠️ You cannot select 'Open water' and 'Bridge available' at the same time. You can only select one of them, please try again.")
 
 
 # --- CATEGORY 3: Temporal Scope ---
