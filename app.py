@@ -14,13 +14,12 @@ if 'compare_widget' not in st.session_state:
     st.session_state.compare_widget = []
 
 # --- LOAD DATA ---
-@st.cache_data
+# Removed @st.cache_data so the CSVs load fresh every single time
 def load_labels_matrix():
     df = pd.read_csv("labels.csv")
     df.rename(columns={df.columns[0]: 'Method'}, inplace=True)
     return df
 
-@st.cache_data
 def load_properties():
     return pd.read_csv("properties_clean.csv")
 
