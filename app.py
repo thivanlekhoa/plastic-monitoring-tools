@@ -124,7 +124,7 @@ temporal = st.multiselect("Select your Temporal Scope:", options=temporal_option
 # --- CATEGORY 4: Resource Capacity ---
 st.subheader("💰 4. Resource Capacity")
 st.write("""
-*Budget encompasses both capital investment and operational costs. Please refer to our documentation for specific budget tier definitions. Selecting a higher budget level will also include recommendations for lower-tier methods (e.g., "High" includes Medium and Low; "Medium" includes Low).*
+Budget encompasses both capital investment and operational costs. Please refer to our documentation for specific budget tier definitions. Selecting a higher budget level will also include recommendations for lower-tier methods (e.g., "High" includes Medium and Low; "Medium" includes Low).
 """)
 resource_options = [
     "Low budget", 
