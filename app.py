@@ -39,6 +39,7 @@ Use this decision-support tool to identify the most suitable monitoring methods 
 **How to use this tool:**
 * **Part 1:** First, go through the four categories below and select the labels that best fit your needs. This will filter the options and recommend the most appropriate monitoring methods for your project.
 * **Part 2:** If you receive multiple recommendations (such as several "Good Fit" methods), you can use the dropdown in Part 2 to select them and compare their specific properties side-by-side.
+* **Part 3:** Learn how to use the recommended methods.
 """)
 
 st.divider()
